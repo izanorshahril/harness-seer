@@ -1,0 +1,6 @@
+{
+  "name": "harness-seer",
+  "description": "Shows Codex, Agy, Claude subagents and background tasks in one animated pane.",
+  "owner": { "name": "izanorshahril" },
+  "plugins": [{ "name": "harness-seer", "source": "./" }]
+}

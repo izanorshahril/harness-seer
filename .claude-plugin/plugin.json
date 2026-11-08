@@ -1,0 +1,32 @@
+{
+  "name": "harness-seer",
+  "version": "0.1.0",
+  "description": "Runs Codex and Agy read-only and shows them with Claude subagents and background tasks in one animated pane, across sessions.",
+  "author": {
+    "name": "izanorshahril"
+  },
+  "license": "MIT",
+  "types": "./types/index.d.ts",
+  "userConfig": {
+    "autoOpen": {
+      "type": "string",
+      "title": "Open the pane",
+      "description": "first-run: the first time a run starts in a session; never: only with /runs or the band's button.",
+      "options": [
+        "first-run",
+        "never"
+      ],
+      "default": "first-run"
+    },
+    "usageShows": {
+      "type": "string",
+      "title": "Usage shows",
+      "description": "Show each Codex and Agy usage window as percent used, the way Claude does, or as percent left, the way Codex does. Colours follow what is left either way, as in cache-seer.",
+      "options": [
+        "used",
+        "left"
+      ],
+      "default": "used"
+    }
+  }
+}
