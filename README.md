@@ -18,7 +18,7 @@ The code and icons are written here; none is copied from savvy-progress, and the
 Validation and 44 tests pass against the engine's test harness, using stubbed engine responses.
 It has not yet run in a live session, so check these first, then install it for all sessions:
 
-1. Start a session with `claude --plugin-dir D:/Dev/harness-seer`.
+1. Start a session with `claude --plugin-dir ./harness-seer` from the folder that holds your clone.
 2. Ask for a background shell task, one subagent and one `mcp__harness-seer__run` Codex call, then open `/runs`.
 3. Confirm all three show, animate and end with the right state, especially that the background task leaves `running`.
 4. Confirm `~/.claude/harness-seer/sessions/` has a file, and that a second session lists the runs under All sessions.
@@ -62,16 +62,16 @@ Files that do not parse as a session are skipped, and a run with an unknown kind
 
 ## Install
 
-From a clone, in a shell:
+In a shell:
 
 ```bash
-claude plugin marketplace add D:/Dev/harness-seer
+claude plugin marketplace add izanorshahril/harness-seer
 claude plugin install harness-seer@harness-seer
 ```
 
 New sessions then load it. Open the pane with `/runs`.
 
-For development, load the folder for one session with `claude --plugin-dir D:/Dev/harness-seer`.
+For development, clone the repository and load the folder for one session with `claude --plugin-dir ./harness-seer`.
 
 ## Settings
 
