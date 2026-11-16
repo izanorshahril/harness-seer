@@ -333,6 +333,29 @@ test('a run tool whose program cannot start ends failed', async ($, on) => {
   expect(state).toBe('failed')
 })
 
+test('the run tool picks sandbox flags by access', async ($, on) => {
+  stubEngine(on)
+  const seen: string[][] = []
+  on('process.spawn', async function* (_, e) {
+    seen.push((e as unknown as { argv: string[] }).argv)
+    throw new Error('stop')
+  })
+  on('prompt.submit', (_, e) => ({ text: (e as { text: string }).text }))
+  on('ui.toast', () => ({ value: undefined }))
+  await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
+  await $.tool.call({ tool: 'mcp__harness-seer__run', harness: 'codex', prompt: 'review' })
+  await $.tool.call({ tool: 'mcp__harness-seer__run', harness: 'codex', prompt: 'build', access: 'write' })
+  await $.tool.call({ tool: 'mcp__harness-seer__run', harness: 'agy', prompt: 'review' })
+  await $.tool.call({ tool: 'mcp__harness-seer__run', harness: 'agy', prompt: 'build', access: 'write' })
+  await $.tool.call({ tool: 'mcp__harness-seer__run', harness: 'codex', prompt: 'x', access: 'full' })
+  for (let i = 0; i < 40 && seen.length < 4; i += 1) await new Promise<void>(resolve => setTimeout(resolve, 5))
+  expect(seen.length).toBe(4)
+  expect(seen[0]?.slice(0, 4)).toEqual(['codex', 'exec', '-s', 'read-only'])
+  expect(seen[1]?.slice(0, 4)).toEqual(['codex', 'exec', '-s', 'workspace-write'])
+  expect(seen[2]?.slice(0, 4)).toEqual(['agy', '--mode', 'plan', '--sandbox'])
+  expect(seen[3]?.slice(0, 4)).toEqual(['agy', '--mode', 'accept-edits', '--sandbox'])
+})
+
 test('a subagent shows with its model and ends with its turn', async ($, on) => {
   stubEngine(on)
   on('agent.spawn', () => ({ agentId: 'ag1', model: 'claude-haiku-5-5' }))

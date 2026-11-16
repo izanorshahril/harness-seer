@@ -87,15 +87,25 @@ const rememberEarly = (ends: readonly TaskEnd[]) => {
   }
 }
 
-const argvFor = (kind: 'codex' | 'agy', model: string, effort: string, prompt: string): { argv: string[]; input?: string } => {
+type Access = 'read' | 'write'
+
+// Write access lets the agent edit files in its working directory and no further:
+// Codex's workspace-write sandbox, Agy's accept-edits mode with its terminal sandbox kept on.
+const argvFor = (
+  kind: 'codex' | 'agy',
+  model: string,
+  effort: string,
+  prompt: string,
+  access: Access = 'read',
+): { argv: string[]; input?: string } => {
   if (kind === 'codex') {
-    const argv = ['codex', 'exec', '-s', 'read-only']
+    const argv = ['codex', 'exec', '-s', access === 'write' ? 'workspace-write' : 'read-only']
     if (model) argv.push('-m', model)
     if (effort) argv.push('-c', `model_reasoning_effort="${effort}"`)
     // The prompt goes in on stdin so long briefs do not hit argv limits.
     return { argv: [...argv, '-'], input: prompt }
   }
-  const argv = ['agy', '--mode', 'plan', '--sandbox', '--output-format', 'text']
+  const argv = ['agy', '--mode', access === 'write' ? 'accept-edits' : 'plan', '--sandbox', '--output-format', 'text']
   if (model) argv.push('--model', model)
   if (effort) argv.push('--effort', effort)
   return { argv: [...argv, '--print', prompt] }
@@ -529,7 +539,7 @@ export const register: Register = (on, options) => {
       name: 'run',
       isDeferred: false,
       description:
-        'Start a read-only Codex CLI (codex exec, read-only sandbox) or Agy CLI (plan mode, sandbox) run in the background and track it in the Runs pane. Returns a run id at once; when the run ends a short notice arrives, then read the output with the result tool. Do not pass secrets in the prompt.',
+        'Start a Codex CLI (codex exec) or Agy CLI run in the background and track it in the Runs pane. access "read" (default) is for reviews and research: Codex read-only sandbox, Agy plan mode. access "write" is for implementation: the agent edits files inside cwd itself (Codex workspace-write sandbox, Agy accept-edits mode with its sandbox on); use a git worktree as cwd to keep its edits apart. Returns a run id at once; when the run ends a short notice arrives, then read the output with the result tool. Do not pass secrets in the prompt.',
       inputSchema: {
         type: 'object',
         properties: {
@@ -538,7 +548,12 @@ export const register: Register = (on, options) => {
           title: { type: 'string', description: 'Short label for the pane.' },
           model: { type: 'string', description: 'Model id; omit for the CLI default.' },
           effort: { type: 'string', enum: ['low', 'medium', 'high', 'xhigh'] },
-          cwd: { type: 'string', description: 'Working directory; default the session cwd.' },
+          access: {
+            type: 'string',
+            enum: ['read', 'write'],
+            description: 'read (default): no file edits. write: may edit files inside cwd.',
+          },
+          cwd: { type: 'string', description: 'Working directory; default the session cwd. With write access, edits land here.' },
         },
         required: ['harness', 'prompt'],
       },
@@ -576,8 +591,18 @@ export const register: Register = (on, options) => {
   })
 
   on('tool.call', { tool: RUN_TOOL }, async ($, e) => {
-    const input = e as unknown as { harness?: string; prompt?: string; title?: string; model?: string; effort?: string; cwd?: string }
+    const input = e as unknown as {
+      harness?: string
+      prompt?: string
+      title?: string
+      model?: string
+      effort?: string
+      access?: string
+      cwd?: string
+    }
     if (input.harness !== 'codex' && input.harness !== 'agy') return { deny: 'harness must be "codex" or "agy".' }
+    const access = input.access ?? 'read'
+    if (access !== 'read' && access !== 'write') return { deny: 'access must be "read" or "write".' }
     const kind = input.harness
     const prompt = input.prompt ?? ''
     if (!prompt.trim()) return { deny: 'prompt is empty.' }
@@ -601,7 +626,7 @@ export const register: Register = (on, options) => {
       output: '',
     })
 
-    const { argv, input: stdin } = argvFor(kind, model, effort, prompt)
+    const { argv, input: stdin } = argvFor(kind, model, effort, prompt, access)
     let child: ReturnType<EngineInterface['process']['spawn']>
     try {
       child = $.process.spawn({ argv, cwd: input.cwd, input: stdin })

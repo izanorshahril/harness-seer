@@ -10,12 +10,12 @@ The code and icons are written here; none is copied from savvy-progress, and the
 | --- | --- |
 | `/runs` pane | A header line (running count, tokens, longest run, scope and clear buttons) and a line each of Codex and Agy usage, as percent used (or left, by the `usageShows` setting), coloured by what is left as cache-seer colours it. Then two lines a run beside its pixel character: the title with a state mark and elapsed time, then an estimated progress bar, kind, model, effort and tokens, with Cancel, or Mark ended for a run whose end never arrived (it only closes the row). Each kind has one body (a CRT for Codex, a hovering orb for Agy, cache-seer's critter for subagents, a crate for tasks) always in its harness's one colour, wearing one of 24 hats (8 styles in 3 colourways), so neighbours differ. |
 | Band above the prompt | Appears only while something runs, with a live icon and count per kind and a button to the pane. |
-| `mcp__harness-seer__run` | Starts Codex (read-only sandbox) or Agy (plan mode, sandbox) in the background. It ends with a notice to the session. |
+| `mcp__harness-seer__run` | Starts Codex or Agy in the background. It ends with a notice to the session. `access: "read"` (default) is for reviews: Codex read-only sandbox, Agy plan mode. `access: "write"` is for implementation: the agent edits files inside `cwd` (Codex workspace-write sandbox, Agy accept-edits mode with its sandbox on). Point `cwd` at a git worktree to keep its edits apart. |
 | `mcp__harness-seer__result` | Reads a run's state and output tail. |
 
 ## Status
 
-Validation and 44 tests pass against the engine's test harness, using stubbed engine responses.
+Validation and 45 tests pass against the engine's test harness, using stubbed engine responses.
 It has not yet run in a live session, so check these first, then install it for all sessions:
 
 1. Start a session with `claude --plugin-dir ./harness-seer` from the folder that holds your clone.

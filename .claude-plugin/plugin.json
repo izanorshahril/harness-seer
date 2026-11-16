@@ -1,7 +1,7 @@
 {
   "name": "harness-seer",
   "version": "0.1.0",
-  "description": "Runs Codex and Agy read-only and shows them with Claude subagents and background tasks in one animated pane, across sessions.",
+  "description": "Runs Codex and Agy, read-only or with write access, and shows them with Claude subagents and background tasks in one animated pane, across sessions.",
   "author": {
     "name": "izanorshahril"
   },
